@@ -4,7 +4,6 @@ import { makeStyles } from '@material-ui/core/styles';
 //import { useStyles } from '@material-ui/core/styles';
 
 import Paper from '@material-ui/core/Paper';
-
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -12,16 +11,20 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 
-const useStyles = makeStyles({
+
+const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 650,
   },
-});
+}));
 
-export function VolumeItemTable(props) {
+
+export function FolderNodeList(props) {
   const classes = useStyles();
-  const {rows, onClick} = props;
-  //console.log(rows, 'uu');
+
+  const {folderView, nodeClick} = props;
+  //console.log ('refresh nodelist', props);
+
   return (
       <TableContainer component={Paper}>
       <Table className={classes.table} size="small" aria-label="a dense table">
@@ -34,9 +37,9 @@ export function VolumeItemTable(props) {
       </TableRow>
       </TableHead>
       <TableBody>
-      {rows.map((v, i) => (
-          <TableRow key={i} hover onClick={(e) => onClick(e, v)}>
-          <TableCell component="th" scope="row">{v}</TableCell>
+      {folderView.nodeList.map((v, i) => (
+          <TableRow key={i} hover onClick={(e) => nodeClick(e, v)}>
+          <TableCell component="th" scope="row">{v[0]}</TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>

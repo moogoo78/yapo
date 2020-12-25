@@ -6,7 +6,7 @@ module.exports = {
     extensions: [".js"],
     mainFields: ["main", "module", "browser"],
   },
-  entry: "./src/App.js",
+  entry: "./src/app.js",
   target: "electron-renderer",
   devtool: "source-map",
   module: {

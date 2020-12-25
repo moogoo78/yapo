@@ -13,20 +13,20 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import ImageIcon from '@material-ui/icons/Image';
 
-export function VolumeMenu(props) {
-  //const classes = useStyles();
-  const {defaultVolume, menuClick} = props;
+export function FolderMenu(props) {
+
+  const {folderView, menuClick} = props;
 
   return (
       <List component="nav">
-      {defaultVolume.map((v, i) => (
+      {folderView.volumeList.map((v, i) => (
           <ListItem key={i} onClick={(e) => menuClick(e, i)}>
         <ListItemAvatar>
         <Avatar>
         <ImageIcon />
         </Avatar>
         </ListItemAvatar>
-        <ListItemText primary={v.name} secondary={v.type} />
+        <ListItemText primary={v.source} secondary={v.type} />
         </ListItem>
       ))}
     </List>

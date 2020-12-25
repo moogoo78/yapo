@@ -8,3 +8,9 @@
 
 pip install --upgrade pip
 
+
+# react structure
+
+- app -> App -> MainPage (AppBar & Tabs)
+  - FolderContainer (Grid)
+    - FolderMenu, FolderNodeList, FolderBreadcrumb
