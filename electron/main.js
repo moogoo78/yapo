@@ -1,21 +1,22 @@
-//import { app, BrowserWindow } from "electron";
-const { app, BrowserWindow } = require('electron')
+const { app, protocol, BrowserWindow, Menu } = require('electron')
 import * as path from "path";
 import * as url from "url";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 760,
     webPreferences: {
       nodeIntegration: true,
-      webSecurity: false,
+      //webSecurity: false,//});
+      //contextIsolation: true, // https://github.com/electron/electron/issues/23506
     },
   });
 
   if (process.env.NODE_ENV === "development") {
     mainWindow.loadURL(`http://localhost:4000`);
     mainWindow.webContents.openDevTools();
+    //Menu.setApplicationMenu(null);
   } else {
     mainWindow.loadURL(
       url.format({
@@ -27,7 +28,10 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow();
+})
+
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

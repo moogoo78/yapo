@@ -16,19 +16,13 @@ const useStyles = makeStyles((theme) => ({
 export function FolderBreadcrumb(props) {
   const classes = useStyles();
   //console.log(props);
-  const {folderView, breadcrumbClick} = props;
-
-  //const breadcrumbList = [folderView.volumeList[folderView.volumeIndex].source];
-  const rootDir = folderView.volumeList[folderView.volumeIndex].source;
-  let tmpPath = folderView.path.replace(rootDir, '');
-  const breadcrumbList = tmpPath.split('\\');
-  breadcrumbList[0] = rootDir;
+  const {dirList, breadcrumbClick} = props;
 
   return (
       <div className={classes.root}>
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
-      {breadcrumbList.map((v,i) =>
-                          (i < breadcrumbList.length - 1
+      {dirList.map((v,i) =>
+                          (i < dirList.length - 1
                            ? (<Link key={i} color="inherit" href="/" onClick={(e) => breadcrumbClick(e, i)}>{v}</Link>)
                            : (<Typography key={i} color="textPrimary">{v}</Typography>)))}
     </Breadcrumbs>

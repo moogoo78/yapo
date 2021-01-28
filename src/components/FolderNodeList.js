@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
 export function FolderNodeList(props) {
   const classes = useStyles();
 
-  const {folderView, nodeClick} = props;
+  const {nodeList, nodeClick} = props;
   //console.log ('refresh nodelist', props);
 
   return (
@@ -37,9 +37,9 @@ export function FolderNodeList(props) {
       </TableRow>
       </TableHead>
       <TableBody>
-      {folderView.nodeList.map((v, i) => (
-          <TableRow key={i} hover onClick={(e) => nodeClick(e, v)}>
-          <TableCell component="th" scope="row">{v[0]}</TableCell>
+      {nodeList.map((v, i) => (
+          <TableRow key={i} hover onClick={(e) => nodeClick(e, i, v)}>
+          <TableCell component="th" scope="row">{v.name}</TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>

@@ -15,11 +15,11 @@ import ImageIcon from '@material-ui/icons/Image';
 
 export function FolderMenu(props) {
 
-  const {folderView, menuClick} = props;
+  const {menuClick, volumeList} = props;
 
   return (
       <List component="nav">
-      {folderView.volumeList.map((v, i) => (
+      {volumeList.map((v, i) => (
           <ListItem key={i} onClick={(e) => menuClick(e, i)}>
         <ListItemAvatar>
         <Avatar>

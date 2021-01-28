@@ -4,6 +4,7 @@
   "description": "",
   "main": "./dist/main.js",
   "scripts": {
+    "electron": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:electron": "cross-env NODE_ENV=development webpack --config webpack.electron.config.js --mode development && electron .",
     "dev:react": "cross-env NODE_ENV=development webpack serve --config webpack.react.config.js --mode development",
