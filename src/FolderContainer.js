@@ -7,11 +7,13 @@ import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 
-
 import { FolderMenu } from './components/FolderMenu';
 import { FolderNodeList } from './components/FolderNodeList';
 import { FolderBreadcrumb } from './components/FolderBreadcrumb';
 import { ImageViewer } from './components/ImageViewer';
+
+import { PythonShell } from 'python-shell';
+
 
 
 function checkImage(imgPath) {

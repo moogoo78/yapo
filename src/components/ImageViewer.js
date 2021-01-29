@@ -13,6 +13,8 @@ import Grid from '@material-ui/core/Grid';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 
+import {ImageAnnotator} from './ImageAnnotator';
+
 export function ImageViewer(props) {
   const {imgPath, open, handleClose, handleNav} = props;
   //console.log(props);
@@ -43,12 +45,10 @@ export function ImageViewer(props) {
         Let Google help apps determine location. This means sending anonymous location data to
       Google, even when no apps are running.
         </DialogContentText>
-        </DialogContent>
+      </DialogContent>
+      <ImageAnnotator />
         <DialogActions>
-        <Button onClick={handleAnnotateClick}>
-      Annotate
-      </Button>
-        <Button onClick={handleClose} color="primary" autoFocus>
+              <Button onClick={handleClose} color="primary" autoFocus>
         Close
       </Button>
         </DialogActions>
