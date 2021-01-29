@@ -12,8 +12,8 @@ import { FolderMenu } from './components/FolderMenu';
 import { FolderNodeList } from './components/FolderNodeList';
 import { FolderBreadcrumb } from './components/FolderBreadcrumb';
 import { ImageViewer } from './components/ImageViewer';
+import {saveSetting} from './Utils';
 
-import { PythonShell } from 'python-shell';
 
 function checkImage(imgPath) {
   const p = path.parse(imgPath);
@@ -98,6 +98,7 @@ export function FolderContainer() {
         })
       });
       refresh(newPath);
+      saveSetting('folder_path', newPath);
     }
   }
 
