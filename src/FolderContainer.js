@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 import React, { useState, useEffect } from 'react';
 
@@ -13,8 +14,6 @@ import { FolderBreadcrumb } from './components/FolderBreadcrumb';
 import { ImageViewer } from './components/ImageViewer';
 
 import { PythonShell } from 'python-shell';
-
-
 
 function checkImage(imgPath) {
   const p = path.parse(imgPath);
@@ -44,18 +43,10 @@ export function FolderContainer() {
     nodeList: [],
     imageList: [],
     imageIndex: -1,
+    folderList: [],
     dirPath: '',
   });
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-
-  /* TODO config Future save in setting file or database */
-  const defaultVolumeList = [{
-    type: 'mount',
-    source: 'D:\\',
-  },{
-    type: 'copy',
-    source: 'volume',
-  }];
 
   const classes = useStyles();
 
@@ -63,7 +54,6 @@ export function FolderContainer() {
     const rows = [];
     const dir = await fs.promises.opendir(path);
     for await (const dirent of dir) {
-      //console.log(dirent, dirent.isDirectory());
       rows.push(dirent);
     }
     return rows;
@@ -77,30 +67,48 @@ export function FolderContainer() {
       for (let i in rows) {
         if (!rows[i].isDirectory() &&
             checkImage([dirPath, rows[i].name].join(path.sep))) {
-          imgList.push(rows[i]);
+          imgList.push(rows[i].name);
         }
       }
+      // TODO: sort by mtime
+      const sorted = imgList.sort();
 
       setFolderView(ps => ({
         ...ps,
         dirPath: dirPath,
         nodeList: rows,
-        imageList: imgList,
+        imageList: sorted,
         imageIndex: -1,
       }));
     }).catch(console.error);
   }
 
+
+  function handleMenuAdd(e) {
+    if (e.target.files.length) {
+      const newPath = path.dirname(e.target.files[0].path);
+      const folderName = newPath.split(path.sep).pop();
+
+      setFolderView(ps => {
+        const newList = ps.folderList;
+        newList.push({path: newPath, label: folderName});
+        return ({
+          ...ps,
+          folderList: newList,
+        })
+      });
+      refresh(newPath);
+    }
+  }
+
   function handleMenuClick(e, index) {
     console.log('click menu volume:', index);
-    const dirPath = defaultVolumeList[index].source; // reset path
+    const dirPath = folderView.folderList[index].path; // reset path
     refresh(dirPath);
   }
 
-  function handleImageNavClick(e, direction) {
-    console.log('click image nav click:', direction);
-    console.log(folderView.imageList.length, folderView.imageIndex);
-    //console.log(folderView);
+
+  function slideImage(direction) {
     let inc = folderView.imageIndex;
     if (direction === 1) {
       if (inc < folderView.imageList.length - 1) {
@@ -117,6 +125,20 @@ export function FolderContainer() {
       ...ps,
       imageIndex: inc,
     }));
+  }
+  function handleImageNavKey(e) {
+    if (e.code === 'ArrowRight') {
+      slideImage(1);
+    } else if (e.code === 'ArrowLeft') {
+      slideImage(-1);
+    }
+  }
+
+  function handleImageNavClick(e, direction) {
+    console.log('click image nav click:', direction);
+    //console.log(folderView.imageList.length, folderView.imageIndex);
+    //console.log(folderView);
+    slideImage(direction);
   }
 
   function handleBreadcrumbClick(e, breadcrumbIndex) {
@@ -143,26 +165,35 @@ export function FolderContainer() {
     }
   }
 
-  console.log('folderView: ', folderView);
+  //console.log('folderView: ', folderView);
 
-  let imgPath = '';
+  let imgView = {
+    path: '',
+    len: 0,
+    index: 0,
+  }
+
   if (folderView.imageList && folderView.imageIndex > -1) {
-    imgPath = [
-      folderView.dirPath,
-      folderView.imageList[folderView.imageIndex].name
-    ].join(path.sep);
+    imgView = {
+      path: [
+        folderView.dirPath,
+        folderView.imageList[folderView.imageIndex]
+      ].join(path.sep),
+      len: folderView.imageList.length,
+      index: folderView.imageIndex + 1,
+    }
   }
 
   return (
       <div className={classes.root}>
       <Grid container spacing={0}>
       <Grid item xs={3}>
-      <FolderMenu menuClick={handleMenuClick} volumeList={defaultVolumeList}/>
+      <FolderMenu menuClick={handleMenuClick} folderList={folderView.folderList} menuAdd={handleMenuAdd}/>
       </Grid>
       <Grid item xs={9}>
       {<FolderBreadcrumb dirList={folderView.dirPath ? folderView.dirPath.split(path.sep) : []} breadcrumbClick={handleBreadcrumbClick} />}
       <Paper className={classes.paper}>
-      {imgPath ? <ImageViewer imgPath={imgPath} open={imageDialogOpen} handleClose={(e)=> setImageDialogOpen(false)} handleNav={handleImageNavClick}/> : null}
+      {imgView.path !== '' ? <ImageViewer imgView={imgView} open={imageDialogOpen} handleClose={(e)=> setImageDialogOpen(false)} handleNav={handleImageNavClick} handleKey={handleImageNavKey}/> : null}
       <FolderNodeList nodeClick={handleNodeClick} nodeList={folderView.nodeList} />
       </Paper>
       </Grid>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const fs = require('fs');
+const path = require('path');
 
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -16,15 +17,16 @@ import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 import {ImageAnnotator} from './ImageAnnotator';
 
 export function ImageViewer(props) {
-  const {imgPath, open, handleClose, handleNav} = props;
+  const {imgView, open, handleClose, handleNav, handleKey} = props;
   //console.log(props);
   let imgSrc = null;
-  if (imgPath) {
-    const base64 = fs.readFileSync(imgPath).toString('base64');
+  if (imgView.path) {
+    const base64 = fs.readFileSync(imgView.path).toString('base64');
     imgSrc = `data:image/jpg;base64,${base64}`;
   }
 
   return (
+      <div onKeyDown={handleKey}>
       <Dialog
       open={open}
       onClose={handleClose}
@@ -34,16 +36,15 @@ export function ImageViewer(props) {
       scroll="body"
       disableBackdropClick={true}
         >
-        <DialogTitle id="alert-dialog-title">{"Image Viewer"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">{imgView.path}</DialogTitle>
         <DialogContent>
         <Grid container spacing={0}>
         <Grid item xs={1}><ArrowBackIosIcon onClick={(e)=> handleNav(e, -1)}/></Grid>
         <Grid item xs={10}><img src={imgSrc} width="680" /></Grid>
         <Grid item xs={1}><ArrowForwardIosIcon onClick={(e) => handleNav(e, 1)}/></Grid>
         </Grid>
-        <DialogContentText id="alert-dialog-description">
-        Let Google help apps determine location. This means sending anonymous location data to
-      Google, even when no apps are running.
+      <DialogContentText id="alert-dialog-description">
+      {imgView.index} / {imgView.len}
         </DialogContentText>
       </DialogContent>
       <ImageAnnotator />
@@ -52,6 +53,7 @@ export function ImageViewer(props) {
         Close
       </Button>
         </DialogActions>
-        </Dialog>
+      </Dialog>
+      </div>
   );
 }
