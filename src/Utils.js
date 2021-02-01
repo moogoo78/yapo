@@ -1,21 +1,33 @@
 import { PythonShell } from 'python-shell';
 
-function saveSetting(key, value) {
-  console.log(key, value);
-
+function runPython(script, xargs, callback) {
   let options = {
     mode: 'text',
     pythonPath: './venv/Scripts/python.exe',
     pythonOptions: ['-u'], // get print results in real-time
     scriptPath: 'py-scripts',
-    args: [key, value]
-  };
+    args: xargs,
+  }
 
-  PythonShell.run('save-setting.py', options, function (err, results) {
-    if (err) throw err;
-    // results is an array consisting of messages collected during execution
-    console.log('results: %j', results);
+  /*
+  let pyshell = new PythonShell(script, options);
+  pyshell.send(kwargs);
+
+  pyshell.on('message', function (message) {
+    // received a message sent from the Python script (a simple "print" statement)
+    console.log(message);
   });
-}
 
-export {saveSetting}
+  // end the input stream and allow the process to exit
+  pyshell.end(function (err,code,signal) {
+    if (err) throw err;
+    console.log('The exit code was: ' + code);
+    console.log('The exit signal was: ' + signal);
+    console.log('finished');
+  });
+  */
+
+  PythonShell.run(script, options, callback);
+};
+
+export {runPython}

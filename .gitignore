@@ -2,3 +2,5 @@ node_modules
 dist
 venv
 volume
+camera-trap-desktop.ini
+camera-trap-desktop.db

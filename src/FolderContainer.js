@@ -12,7 +12,7 @@ import { FolderMenu } from './components/FolderMenu';
 import { FolderNodeList } from './components/FolderNodeList';
 import { FolderBreadcrumb } from './components/FolderBreadcrumb';
 import { ImageViewer } from './components/ImageViewer';
-import {saveSetting} from './Utils';
+import { runPython } from './Utils';
 
 
 function checkImage(imgPath) {
@@ -48,13 +48,34 @@ export function FolderContainer() {
   });
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
 
+  useEffect(() => {
+    // init
+    runPython('setting.py', ['load', 'Folders'], (err, results) => {
+      if (err) throw err;
+      //console.log('results:' , results);
+      const res = JSON.parse(results);
+      if (res.section.Folders.length) {
+        setFolderView(ps => {
+          console.log(res.section.Folders);
+          const fdList = res.section.Folders.map((x) => ({label: x[0], path: x[1]}));
+          return ({
+            ...ps,
+            folderList: fdList
+          })
+        });
+      }
+    });
+  }, []);
+
   const classes = useStyles();
 
   async function scanDir(path) {
     const rows = [];
     const dir = await fs.promises.opendir(path);
     for await (const dirent of dir) {
-      rows.push(dirent);
+      if (dirent.name[0] !== '.') {
+        rows.push(dirent);
+      }
     }
     return rows;
   }
@@ -98,7 +119,13 @@ export function FolderContainer() {
         })
       });
       refresh(newPath);
-      saveSetting('folder_path', newPath);
+
+      runPython('setting.py',
+                ['save', 'Folders', folderName, newPath],
+                (err, results) => {
+                  if (err) throw err;
+                  console.log('results:' , results);
+                });
     }
   }
 
