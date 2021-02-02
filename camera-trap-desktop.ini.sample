@@ -1,0 +1,8 @@
+[Folders]
+
+[SQLite]
+dbfile = camera-trap-desktop.db
+
+[Thumbnail]
+destination = camera-trap-desktop
+prefix = thumb-
