@@ -39,7 +39,7 @@ export function FolderNodeList(props) {
       <TableBody>
       {nodeList.map((v, i) => (
           <TableRow key={i} hover onClick={(e) => nodeClick(e, i, v)}>
-          <TableCell component="th" scope="row">{v.name}</TableCell>
+          <TableCell component="th" scope="row">{v[0]}</TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>

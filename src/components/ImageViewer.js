@@ -18,7 +18,7 @@ import {ImageAnnotator} from './ImageAnnotator';
 
 export function ImageViewer(props) {
   const {imgView, open, handleClose, handleNav, handleKey} = props;
-  //console.log(props);
+  console.log(props);
   let imgSrc = null;
   if (imgView.path) {
     const base64 = fs.readFileSync(imgView.path).toString('base64');

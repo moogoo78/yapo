@@ -56,7 +56,6 @@ export function FolderContainer() {
       const res = JSON.parse(results);
       if (res.section.Folders.length) {
         setFolderView(ps => {
-          console.log(res.section.Folders);
           const fdList = res.section.Folders.map((x) => ({label: x[0], path: x[1]}));
           return ({
             ...ps,
@@ -81,8 +80,9 @@ export function FolderContainer() {
   }
 
 
-  function refresh(dirPath) {
+  function refresh(dirPath, isStaging=false) {
 
+    /*
     scanDir(dirPath).then((rows) => {
       const imgList = [];
       for (let i in rows) {
@@ -102,6 +102,22 @@ export function FolderContainer() {
         imageIndex: -1,
       }));
     }).catch(console.error);
+    */
+    runPython(
+      'scan-dir.py',
+      ['-p', dirPath, '--db', '-t'],
+      (err, results) => {
+        if (err) throw err;
+        const res = JSON.parse(results);
+        console.log('results:' , res);
+        setFolderView(ps => ({
+          ...ps,
+          dirPath: dirPath,
+          nodeList: res['node_list'],
+          imageList: res['img_list'],
+          imageIndex: -1,
+        }));
+      });
   }
 
 
@@ -110,6 +126,7 @@ export function FolderContainer() {
       const newPath = path.dirname(e.target.files[0].path);
       const folderName = newPath.split(path.sep).pop();
 
+      // TODO: refresh 2 times in this function!
       setFolderView(ps => {
         const newList = ps.folderList;
         newList.push({path: newPath, label: folderName});
@@ -118,7 +135,7 @@ export function FolderContainer() {
           folderList: newList,
         })
       });
-      refresh(newPath);
+      refresh(newPath, isStaging=True);
 
       runPython('setting.py',
                 ['save', 'Folders', folderName, newPath],
@@ -178,9 +195,9 @@ export function FolderContainer() {
   }
 
   function handleNodeClick(e, index, row){
-    const newPath = path.join(folderView.dirPath, row.name);
+    const newPath = path.join(folderView.dirPath, row[0]);
     //console.log(index, row);
-    if (row.isDirectory()) {
+    if (row[1]) {
       refresh(newPath);
     } else if (checkImage(newPath)){
       console.log('click image', newPath, index);
@@ -203,14 +220,12 @@ export function FolderContainer() {
 
   if (folderView.imageList && folderView.imageIndex > -1) {
     imgView = {
-      path: [
-        folderView.dirPath,
-        folderView.imageList[folderView.imageIndex]
-      ].join(path.sep),
+      path: folderView.imageList[folderView.imageIndex].path,
       len: folderView.imageList.length,
       index: folderView.imageIndex + 1,
     }
   }
+  //console.log(imgView, folderView);
 
   return (
       <div className={classes.root}>
