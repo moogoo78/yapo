@@ -22,7 +22,9 @@ def main(args):
     }
     if args.action == 'load':
         for section in config.sections():
-            ret['section'][section] = config.items(section)
+            ret['section'][section] = {}
+            for i, v in config.items(section):
+                ret['section'][section][i] = v
         ret['result'] = 'ok'
 
     elif args.action == 'save':

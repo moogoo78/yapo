@@ -53,7 +53,20 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MainPage() {
+  const themes = {
+    light: {
+      foreground: "#000000",
+      background: "#eeeeee"
+    },
+    dark: {
+      foreground: "#ffffff",
+      background: "#222222"
+    }
+  };
+
+const SettingContext = React.createContext(themes.light);
+
+function MainPage() {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
   const [setting, setSetting] = React.useState({
@@ -93,6 +106,7 @@ export default function MainPage() {
   if (setting.isLoaded) {
     return (
         <div className={classes.root}>
+        <SettingContext.Provider value={setting}>
         <AppBar position="static">
         <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
         <Tab label="Folder" {...a11yProps(0)} />
@@ -101,7 +115,7 @@ export default function MainPage() {
         </Tabs>
         </AppBar>
         <TabPanel value={value} index={0}>
-        <FolderContainer setting={setting} loadSetting={loadSetting}/>
+        <FolderContainer loadSetting={loadSetting}/>
         </TabPanel>
         <TabPanel value={value} index={1}>
         Item Two
@@ -109,10 +123,11 @@ export default function MainPage() {
         <TabPanel value={value} index={2}>
         Item Three
       </TabPanel>
+        </SettingContext.Provider>
         </div>
     );
   } else {
     return <div>loading ...</div>
   }
 }
-
+export {MainPage, SettingContext}

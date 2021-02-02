@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
@@ -13,7 +13,7 @@ import { FolderNodeList } from './components/FolderNodeList';
 import { FolderBreadcrumb } from './components/FolderBreadcrumb';
 import { ImageViewer } from './components/ImageViewer';
 import { runPython } from './Utils';
-
+import { SettingContext } from './MainPage';
 
 function checkImage(imgPath) {
   const p = path.parse(imgPath);
@@ -36,8 +36,17 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export function FolderContainer(props) {
-  const {setting, loadSetting} = props;
-  const fdList = setting.section.Folders.map(x => ({path: x[1], label: x[0]}));
+  const {loadSetting} = props;
+  const setting = useContext(SettingContext);
+  //console.log(setting);
+
+  const fdList = [];
+  for (let i in setting.section.Folders) {
+    fdList.push({
+      label: i,
+      path: setting.section.Folders[i],
+    });
+  }
 
   const [folderView, setFolderView] = React.useState({
     nodeList: [],
@@ -90,8 +99,9 @@ export function FolderContainer(props) {
       }));
     }).catch(console.error);
     */
-    const dbFile = setting.section.SQLite[0][1];
-    const thumbDir = setting.section.Thumbnail[0][1];
+
+    const dbFile = setting.section.SQLite.dbfile;
+    const thumbDir = setting.section.Thumbnail.destination;
 
     //os.platform() win32
     //console.log(dirPath.split('\\').join('\\\\'));
@@ -221,7 +231,7 @@ export function FolderContainer(props) {
       <Grid item xs={9}>
       {<FolderBreadcrumb dirList={folderView.dirPath ? folderView.dirPath.split(path.sep) : []} breadcrumbClick={handleBreadcrumbClick} />}
       <Paper className={classes.paper}>
-      {imgView.path !== '' ? <ImageViewer imgView={imgView} open={imageDialogOpen} handleClose={(e)=> setImageDialogOpen(false)} handleNav={handleImageNavClick} handleKey={handleImageNavKey}/> : null}
+      {imgView.path !== '' ? <ImageViewer imgView={imgView} open={imageDialogOpen} handleClose={(e)=> setImageDialogOpen(false)} handleNav={handleImageNavClick} handleKey={handleImageNavKey} /> : null}
     {folderView.isLoaded ? <FolderNodeList nodeClick={handleNodeClick} nodeList={folderView.nodeList} /> : <div>🦌💨</div> }
       </Paper>
       </Grid>

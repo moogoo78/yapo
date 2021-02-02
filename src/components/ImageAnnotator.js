@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -6,6 +6,9 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import TextField from '@material-ui/core/TextField';
+
+import { SettingContext } from '../MainPage';
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -17,110 +20,71 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+function FormElement(props) {
+  const {name, data, change, value} = props;
+
+  if (data.type === 'select') {
+    const options = data.choices.split('|').map( (opt, optIdx) => {
+      const optList = opt.split(':');
+      const optValue = optList.length > 1 ? optList[1] : optList[0];
+      const optLabel = optList[0];
+      //console.log(optValue, optList, formValues[name]);
+      return (<MenuItem value={optValue} key={optIdx}>{optLabel}</MenuItem>)
+    });
+
+    return (
+        <React.Fragment>
+        <InputLabel id={"annotation-"+name+"-label"}>{data.label}</InputLabel>
+        <Select
+      labelId={"annotation-"+name+"-label"}
+      id={"annotation-"+name}
+      onChange={(e) => change(e, name)}
+      value={value}
+      name={name}
+        >
+        <MenuItem value="" key={0}>--</MenuItem>
+        {options}
+      </Select>
+        </React.Fragment>
+    )
+  } else if (data.type === 'text') {
+    return (
+        <TextField id={"annotation"+name} label={data.label} value={value} name={name} onChange={change}/>
+    )
+  }
+}
+
 export function ImageAnnotator(props) {
   const classes = useStyles();
-  const [age, setAge] = React.useState('');
+  const setting = useContext(SettingContext);
+  const fields = [];
+  const vals = {};
+  for (let i in setting.section) {
+    if (i.startsWith('AnnotationField')) {
+      const name = i.replace('AnnotationField', '').toLowerCase();
+      fields.push([name, setting.section[i]]);
+      vals[name] = '';
+    }
+  }
+  const [formValues, setFormValues] = React.useState(vals);
 
-  const handleChange = (event) => {
-    //setAge(event.target.value);
-  };
+    const handleChange = (event) => {
+    console.log(event.target.value);
+    setFormValues(ps => ({
+      ...ps,
+      [event.target.name]: event.target.value
+    }));
+  }
+
+  console.log(formValues);
+
   return (
     <React.Fragment>
-      <FormControl className={classes.formControl}>
-      <InputLabel id="annotation-species-label">Species</InputLabel>
-      <Select
-    labelId="annotation-species-label"
-    id="annotation-species"
-    onChange={handleChange}
-    value={age}
-      >
-      <MenuItem value={10}>山羌</MenuItem>
-      <MenuItem value={20}>水鹿</MenuItem>
-      <MenuItem value={40}>山羊</MenuItem>
-      <MenuItem value={30}>獼猴</MenuItem>
-      <MenuItem value={30}>鳥；</MenuItem>
-      </Select>
-      </FormControl>
-      <FormControl className={classes.formControl}>
-      <InputLabel id="annotation-age-label">年齡</InputLabel>
-      <Select
-    labelId="annotation-age-label"
-    id="annotation-age"
-    onChange={handleChange}
-    value={age}
-      >
-      <MenuItem value={10}>10</MenuItem>
-      <MenuItem value={20}>20</MenuItem>
-      <MenuItem value={30}>30</MenuItem>
-      </Select>
-      </FormControl>
-
-      <FormControl className={classes.formControl}>
-      <InputLabel id="annotation-species-label">Species</InputLabel>
-      <Select
-    labelId="annotation-species-label"
-    id="annotation-species"
-    onChange={handleChange}
-    value={""}
-      >
-      <MenuItem value={10}>山羌</MenuItem>
-      <MenuItem value={20}>水鹿</MenuItem>
-      <MenuItem value={40}>山羊</MenuItem>
-      <MenuItem value={30}>獼猴</MenuItem>
-      <MenuItem value={30}>鳥；</MenuItem>
-      </Select>
-      </FormControl>
-      <FormControl className={classes.formControl}>
-      <InputLabel id="annotation-sex-label">性別</InputLabel>
-      <Select
-    labelId="annotation-sex-label"
-    id="annotation-sex"
-    onChange={handleChange}
-    value={""}
-      >
-      <MenuItem value="">--</MenuItem>
-      <MenuItem value="m">male</MenuItem>
-      <MenuItem value="f">female</MenuItem>
-      </Select>
-      </FormControl>
-
-
-      <FormControl className={classes.formControl}>
-      <InputLabel id="annotation-a-label">角況</InputLabel>
-      <Select
-    labelId="annotation-a-label"
-    id="annotation-a"
-    onChange={handleChange}
-    value={""}
-      >
-      <MenuItem value="">--</MenuItem>
-      </Select>
-      </FormControl>
-
-          <FormControl className={classes.formControl}>
-      <InputLabel id="annotation-b-label">隻數</InputLabel>
-      <Select
-    labelId="annotation-b-label"
-    id="annotation-b"
-    onChange={handleChange}
-    value={""}
-      >
-      <MenuItem value="">--</MenuItem>
-      </Select>
-      </FormControl>
-
-      <FormControl className={classes.formControl}>
-      <InputLabel id="annotation-c-label">個體 ID</InputLabel>
-      <Select
-    labelId="annotation-c-label"
-    id="annotation-c"
-    onChange={handleChange}
-    value={""}
-      >
-      <MenuItem value="">--</MenuItem>
-      </Select>
-      </FormControl>
-
-      </React.Fragment>
+    {fields.map((v, i) => (
+        <FormControl className={classes.formControl} key={i}>
+        <FormElement data={v[1]} name={v[0]} change={handleChange} value={formValues[v[0]]}/>
+        </FormControl>
+    ))}
+    </React.Fragment>
   )
 }
