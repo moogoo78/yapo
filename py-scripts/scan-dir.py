@@ -9,6 +9,7 @@ import hashlib
 
 import base64
 import struct
+from pathlib import Path, PurePath
 
 from thumpy import Thumpy
 
@@ -16,8 +17,7 @@ IGNORE_FILES = ['Thumbs.db', '']
 IMAGE_EXTENSIONS = ['.JPG', '.JPEG', '.PNG']
 
 '''
-key: {timestamp}:{hash[4:]}
-CREATE TABLE images (path TEXT, name TEXT, status TEXT, hash TEXT, key TEXT UNIQUE);
+key: {timestamp}:{hash[:6]}
 '''
 
 def check_image(dirent):
@@ -47,8 +47,15 @@ def main(args):
     img_list: [{'path':'foo_path', 'name': 'foo_name'}]
     '''
     dir_path = args.path
-    make_thumb = args.thumb
-    save_db = args.db
+    thumb_dir = args.thumb
+    db_file = args.db
+    is_debug = args.verbose
+
+    if is_debug:
+        print (args)
+
+    if args.ipc:
+        is_debug = False
 
     ret = {
         'node_list': [],
@@ -58,12 +65,14 @@ def main(args):
     key_prefix = str(int(time.time()))
 
     thumpy = None
-    if make_thumb:
-        thumpy = Thumpy('camera-trap-desktop-thumbnails', dir_path, True)
+    if thumb_dir:
+        thumpy = Thumpy(thumb_dir, dir_path, is_debug)
 
-    if save_db:
-        conn = sqlite3.connect('camera-trap-desktop.db')
+    if db_file:
+        conn = sqlite3.connect(db_file)
         c = conn.cursor()
+        sql = "CREATE TABLE IF NOT EXISTS images (path TEXT, name TEXT, status TEXT, hash TEXT, key TEXT UNIQUE);"
+        c.execute(sql)
 
     with os.scandir(dir_path) as it:
         for entry in it:
@@ -74,51 +83,37 @@ def main(args):
                         'path': entry.path,
                         'name': entry.name,
                     })
-                    if save_db:
-                        h = get_digest(entry.path)
-                        key = '{}-{}'.format(key_prefix, h[:6])
-                        sql = "INSERT INTO images VALUES ('{}','{}','{}','{}','{}')".format(
-                            entry.path, entry.name, 'I', h, key)
-                        c.execute(sql)
-                    if make_thumb and thumpy:
+
+                    if thumpy:
                         thumpy.make(entry.path)
-        if save_db:
+
+                    if db_file:
+                        if h:= get_digest(entry.path):
+                            key = '{}-{}'.format(key_prefix, h[:6])
+                            sql = "INSERT INTO images VALUES ('{}','{}','{}','{}','{}')".format(
+                                entry.path, entry.name, 'I', h, key)
+                            c.execute(sql)
+        if db_file:
             conn.commit()
             conn.close()
     return ret
 
 
-'''parser = OptionParser()
-parser.add_option("-p", "--path", dest="path",
-                  help="dir path")
-parser.add_option("--db", dest="save_db",
-                  action="store_true", default=False,
-                  help="save status in database")
-parser.add_option("-t", "--thumb", dest="make_thumb",
-                  action="store_true", default=False,
-                  help="make thumbnails")
-(options, args) = parser.parse_args()
-'''
-
 parser = argparse.ArgumentParser(description='scan dir for images, and save status in database')
-#parser.add_argument('integers', metavar='N', type=int, nargs='+',
-#                                                             help='an integer for the accumulator')
-#parser.add_argument('--sum', dest='accumulate', action='store_const',
-#                                                             const=sum, default=max,
-#                    help='sum the integers (default: find the max)')
 parser.add_argument('-p', '--path', required=True,
                     help='dir path')
-parser.add_argument('--db', action='store_true',
-                    help='save status in database')
-parser.add_argument('-t', '--thumb', action='store_true',
-                    help='make thumbnails')
+parser.add_argument('-d', '--db',
+                    help='save status in database (SQLite)')
+parser.add_argument('-t', '--thumb',
+                    help='thumbnails dir name in HOME path')
+parser.add_argument('-s', '--ipc', action='store_true',
+                    help='for ipc (python-shell)')
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='verbose for debug')
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print ('no args')
-    else:
-        ret = main(args)
-        #print (json.dumps(ret))
-        #else:
-        #    print ('no path')
+    ret = main(args)
+    if args.ipc:
+        print (json.dumps(ret))
+

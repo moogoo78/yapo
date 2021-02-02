@@ -35,35 +35,22 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export function FolderContainer() {
-
-  //journey: new Array(defaultVolume.length), // TODO: memorize path for each volume
+export function FolderContainer(props) {
+  const {setting, loadSetting} = props;
+  const fdList = setting.section.Folders.map(x => ({path: x[1], label: x[0]}));
 
   const [folderView, setFolderView] = React.useState({
     nodeList: [],
     imageList: [],
     imageIndex: -1,
-    folderList: [],
     dirPath: '',
+    isLoaded: false,
   });
+  const [folderList, setFolderList] = React.useState(fdList);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
 
   useEffect(() => {
     // init
-    runPython('setting.py', ['load', 'Folders'], (err, results) => {
-      if (err) throw err;
-      //console.log('results:' , results);
-      const res = JSON.parse(results);
-      if (res.section.Folders.length) {
-        setFolderView(ps => {
-          const fdList = res.section.Folders.map((x) => ({label: x[0], path: x[1]}));
-          return ({
-            ...ps,
-            folderList: fdList
-          })
-        });
-      }
-    });
   }, []);
 
   const classes = useStyles();
@@ -81,8 +68,8 @@ export function FolderContainer() {
 
 
   function refresh(dirPath, isStaging=false) {
-
     /*
+      by javascript (nodejs)
     scanDir(dirPath).then((rows) => {
       const imgList = [];
       for (let i in rows) {
@@ -103,9 +90,16 @@ export function FolderContainer() {
       }));
     }).catch(console.error);
     */
+    const dbFile = setting.section.SQLite[0][1];
+    const thumbDir = setting.section.Thumbnail[0][1];
+
+    //os.platform() win32
+    //console.log(dirPath.split('\\').join('\\\\'));
+    console.log('refresh', dirPath);
+    ['-p', dirPath, '--db', dbFile, '--thumb', thumbDir, '-s'],
     runPython(
       'scan-dir.py',
-      ['-p', dirPath, '--db', '-t'],
+      ['-p', dirPath, '-s'],
       (err, results) => {
         if (err) throw err;
         const res = JSON.parse(results);
@@ -116,6 +110,7 @@ export function FolderContainer() {
           nodeList: res['node_list'],
           imageList: res['img_list'],
           imageIndex: -1,
+          isLoaded: true
         }));
       });
   }
@@ -126,29 +121,20 @@ export function FolderContainer() {
       const newPath = path.dirname(e.target.files[0].path);
       const folderName = newPath.split(path.sep).pop();
 
-      // TODO: refresh 2 times in this function!
-      setFolderView(ps => {
-        const newList = ps.folderList;
-        newList.push({path: newPath, label: folderName});
-        return ({
-          ...ps,
-          folderList: newList,
-        })
-      });
-      refresh(newPath, isStaging=True);
-
       runPython('setting.py',
-                ['save', 'Folders', folderName, newPath],
+                ['-i', setting.ini, '-x', 'save', '-s', '-c', 'Folders', '-k', folderName, '-a', newPath],
                 (err, results) => {
                   if (err) throw err;
-                  console.log('results:' , results);
+                  //console.log('results:' , results);
+                  loadSetting();
                 });
     }
   }
 
   function handleMenuClick(e, index) {
     console.log('click menu volume:', index);
-    const dirPath = folderView.folderList[index].path; // reset path
+    const dirPath = folderList[index].path; // reset path
+    setFolderView(ps => ({...ps, isLoaded:false}));
     refresh(dirPath);
   }
 
@@ -226,18 +212,17 @@ export function FolderContainer() {
     }
   }
   //console.log(imgView, folderView);
-
   return (
       <div className={classes.root}>
       <Grid container spacing={0}>
       <Grid item xs={3}>
-      <FolderMenu menuClick={handleMenuClick} folderList={folderView.folderList} menuAdd={handleMenuAdd}/>
+      <FolderMenu menuClick={handleMenuClick} folderList={folderList} menuAdd={handleMenuAdd}/>
       </Grid>
       <Grid item xs={9}>
       {<FolderBreadcrumb dirList={folderView.dirPath ? folderView.dirPath.split(path.sep) : []} breadcrumbClick={handleBreadcrumbClick} />}
       <Paper className={classes.paper}>
       {imgView.path !== '' ? <ImageViewer imgView={imgView} open={imageDialogOpen} handleClose={(e)=> setImageDialogOpen(false)} handleNav={handleImageNavClick} handleKey={handleImageNavKey}/> : null}
-      <FolderNodeList nodeClick={handleNodeClick} nodeList={folderView.nodeList} />
+    {folderView.isLoaded ? <FolderNodeList nodeClick={handleNodeClick} nodeList={folderView.nodeList} /> : <div>🦌💨</div> }
       </Paper>
       </Grid>
       </Grid>
