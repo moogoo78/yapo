@@ -49,8 +49,11 @@ export function ImageViewer(props) {
       </DialogContent>
       <ImageAnnotator />
         <DialogActions>
-              <Button onClick={handleClose} color="primary" autoFocus>
-        Close
+              <Button onClick={handleClose} color="primary">
+        Cancel
+    </Button>
+                    <Button onClick={handleClose} color="primary" autoFocus>
+      Save
       </Button>
         </DialogActions>
       </Dialog>

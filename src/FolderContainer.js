@@ -53,7 +53,7 @@ export function FolderContainer(props) {
     imageList: [],
     imageIndex: -1,
     dirPath: '',
-    isLoaded: false,
+    isLoaded: true,
   });
   const [folderList, setFolderList] = React.useState(fdList);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -75,8 +75,29 @@ export function FolderContainer(props) {
     return rows;
   }
 
+  function getDirStats(e, index) {
+    const dbFile = setting.section.SQLite.dbfile;
 
-  function refresh(dirPath, isStaging=false) {
+    const dirPath = folderList[index].path; // reset path
+
+    runPython(
+      'dir-stats.py',
+      ['-p', dirPath, '-s', '-d', dbFile],
+      (err, results) => {
+        if (err) throw err;
+        const res = JSON.parse(results);
+        console.log('results:' , res);
+        setFolderView(ps => ({
+          ...ps,
+          dirPath: dirPath,
+          nodeList: res.results,
+          imageList: res.results,
+          imageIndex: -1,
+        }));
+      });
+  }
+
+  function refresh(dirPath, startWorking=false) {
     /*
       by javascript (nodejs)
     scanDir(dirPath).then((rows) => {
@@ -106,10 +127,14 @@ export function FolderContainer(props) {
     //os.platform() win32
     //console.log(dirPath.split('\\').join('\\\\'));
     console.log('refresh', dirPath);
-    ['-p', dirPath, '--db', dbFile, '--thumb', thumbDir, '-s'],
+    //['-p', dirPath, '--db', dbFile, '--thumb', thumbDir, '-s']
+    const args = startWorking ?
+          ['-p', dirPath, '--db', dbFile, '-s']
+          : ['-p', dirPath, '-s'];
+
     runPython(
       'scan-dir.py',
-      ['-p', dirPath, '-s'],
+      args,
       (err, results) => {
         if (err) throw err;
         const res = JSON.parse(results);
@@ -128,16 +153,30 @@ export function FolderContainer(props) {
 
   function handleMenuAdd(e) {
     if (e.target.files.length) {
+      setFolderView(ps => ({...ps, isLoaded:false}));
       const newPath = path.dirname(e.target.files[0].path);
       const folderName = newPath.split(path.sep).pop();
 
-      runPython('setting.py',
+      const dbFile = setting.section.SQLite.dbfile;
+      const thumbDir = setting.section.Thumbnail.destination;
+
+      runPython(
+        'scan-dir.py',
+        ['-p', newPath, '--db', dbFile, '-s'],
+        (err, results) => {
+          if (err) throw err;
+          const res = JSON.parse(results);
+          console.log('results:' , res);
+          setFolderView(ps => ({...ps, isLoaded:true}));
+
+                runPython('setting.py',
                 ['-i', setting.ini, '-x', 'save', '-s', '-c', 'Folders', '-k', folderName, '-a', newPath],
                 (err, results) => {
                   if (err) throw err;
                   //console.log('results:' , results);
                   loadSetting();
                 });
+        });
     }
   }
 
@@ -148,6 +187,14 @@ export function FolderContainer(props) {
     refresh(dirPath);
   }
 
+  function handleMenuWorking(e, index) {
+    console.log('click menu volume:', index);
+    const dirPath = folderList[index].path; // reset path
+    const folderName = folderList[index].label;
+
+    setFolderView(ps => ({...ps, isLoaded:false}));
+    refresh(dirPath, true);
+  }
 
   function slideImage(direction) {
     let inc = folderView.imageIndex;
@@ -193,17 +240,17 @@ export function FolderContainer(props) {
   function handleNodeClick(e, index, row){
     const newPath = path.join(folderView.dirPath, row[0]);
     //console.log(index, row);
-    if (row[1]) {
-      refresh(newPath);
-    } else if (checkImage(newPath)){
-      console.log('click image', newPath, index);
-      // TODO: find index
-      setImageDialogOpen(true);
-      setFolderView(ps => ({
-        ...ps,
-        imageIndex: index,
-      }));
-    }
+    //if (row[1]) {
+    //  refresh(newPath);
+    //} else if (checkImage(newPath)){
+    //  console.log('click image', newPath, index);
+    // TODO: find index
+    setImageDialogOpen(true);
+    setFolderView(ps => ({
+      ...ps,
+      imageIndex: index,
+    }));
+    //}
   }
 
   //console.log('folderView: ', folderView);
@@ -216,17 +263,18 @@ export function FolderContainer(props) {
 
   if (folderView.imageList && folderView.imageIndex > -1) {
     imgView = {
-      path: folderView.imageList[folderView.imageIndex].path,
+      path: folderView.imageList[folderView.imageIndex][0],
       len: folderView.imageList.length,
       index: folderView.imageIndex + 1,
     }
   }
-  //console.log(imgView, folderView);
+  console.log(imgView, folderView);
   return (
       <div className={classes.root}>
       <Grid container spacing={0}>
       <Grid item xs={3}>
-      <FolderMenu menuClick={handleMenuClick} folderList={folderList} menuAdd={handleMenuAdd}/>
+      { folderView.isLoaded ? 
+        <FolderMenu menuClick={handleMenuClick} folderList={folderList} menuAdd={handleMenuAdd} menuWorking={handleMenuWorking} dirStats={getDirStats} /> : <div>...</div> }
       </Grid>
       <Grid item xs={9}>
       {<FolderBreadcrumb dirList={folderView.dirPath ? folderView.dirPath.split(path.sep) : []} breadcrumbClick={handleBreadcrumbClick} />}

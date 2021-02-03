@@ -73,6 +73,11 @@ def main(args):
         c = conn.cursor()
         sql = "CREATE TABLE IF NOT EXISTS images (path TEXT, name TEXT, status TEXT, hash TEXT, key TEXT UNIQUE);"
         c.execute(sql)
+        # working dir
+        sql = "CREATE TABLE IF NOT EXISTS working (key TEXT, name TEXT, status TEXT);"
+        c.execute(sql)
+        sql = "INSERT INTO working VALUES ('{}','{}','{}')".format(key_prefix, dir_path, 'I')
+        c.execute(sql)
 
     with os.scandir(dir_path) as it:
         for entry in it:

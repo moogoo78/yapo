@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useContext} from 'react';
 
 import { useStyles } from '@material-ui/core/styles';
 import TreeView from '@material-ui/lab/TreeView';
@@ -12,24 +12,28 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import ImageIcon from '@material-ui/icons/Image';
+import PlaylistAddIcon from '@material-ui/icons/PlaylistAdd';
 
 import { Button } from '@material-ui/core';
 
+import { SettingContext } from '../MainPage';
+
 export function FolderMenu(props) {
 
-  const {menuClick, folderList, menuAdd} = props;
+  const {menuClick, folderList, menuAdd, menuWorking, dirStats} = props;
 
-
+  const setting = useContext(SettingContext);
+  //console.log(setting);
   return (
       <List component="nav">
       {folderList.map((v, i) => (
           <ListItem key={i}>
-        <ListItemAvatar  onClick={(e) => menuClick(e, i)}>
+        <ListItemAvatar onClick={(e) => dirStats(e, i)}>
         <Avatar>
-        <ImageIcon />
+          <ImageIcon />
         </Avatar>
         </ListItemAvatar>
-          <ListItemText primary={v.label} secondary={v.path} onClick={(e) => menuClick(e, i)}/>
+          <ListItemText primary={v.label} secondary={v.path} onClick={(e) => dirStats(e, i)}/>
           {/*<Button variant="outlined" size="small">刪除</Button>*/}
         </ListItem>
       ))}

@@ -30,18 +30,18 @@ export function FolderNodeList(props) {
       <Table className={classes.table} size="small" aria-label="a dense table">
       <TableHead>
       <TableRow>
+      <TableCell>#</TableCell>
+      <TableCell>status⚪🔴🔵</TableCell>
       <TableCell>name</TableCell>
       <TableCell align="right">last modified</TableCell>
-      <TableCell align="right">type</TableCell>
-      <TableCell align="right">size</TableCell>
       </TableRow>
       </TableHead>
       <TableBody>
       {nodeList.map((v, i) => (
           <TableRow key={i} hover onClick={(e) => nodeClick(e, i, v)}>
-          <TableCell component="th" scope="row">{v[0]}</TableCell>
-          <TableCell align="right"></TableCell>
-          <TableCell align="right"></TableCell>
+          <TableCell component="th" scope="row">{i+1}</TableCell>
+          <TableCell>⚪</TableCell>
+          <TableCell>{v[1]}</TableCell>
           <TableCell align="right"></TableCell>
           </TableRow>
       ))}
