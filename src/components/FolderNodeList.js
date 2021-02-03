@@ -24,14 +24,14 @@ export function FolderNodeList(props) {
 
   const {nodeList, nodeClick} = props;
   //console.log ('refresh nodelist', props);
-
+  /* 🔴 🟢*/
   return (
       <TableContainer component={Paper}>
       <Table className={classes.table} size="small" aria-label="a dense table">
       <TableHead>
       <TableRow>
       <TableCell>#</TableCell>
-      <TableCell>status⚪🔴🔵</TableCell>
+      <TableCell>狀態 ⚪:空白🟡:已標註 </TableCell>
       <TableCell>name</TableCell>
       <TableCell align="right">last modified</TableCell>
       </TableRow>
@@ -40,7 +40,7 @@ export function FolderNodeList(props) {
       {nodeList.map((v, i) => (
           <TableRow key={i} hover onClick={(e) => nodeClick(e, i, v)}>
           <TableCell component="th" scope="row">{i+1}</TableCell>
-          <TableCell>⚪</TableCell>
+          <TableCell>{v[2] === "I" ? '⚪': '🟡'}</TableCell>
           <TableCell>{v[1]}</TableCell>
           <TableCell align="right"></TableCell>
           </TableRow>

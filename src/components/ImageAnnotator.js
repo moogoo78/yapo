@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -20,6 +20,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
 function FormElement(props) {
   const {name, data, change, value} = props;
 
@@ -38,7 +39,7 @@ function FormElement(props) {
         <Select
       labelId={"annotation-"+name+"-label"}
       id={"annotation-"+name}
-      onChange={(e) => change(e, name)}
+      onChange={change}
       value={value}
       name={name}
         >
@@ -55,36 +56,27 @@ function FormElement(props) {
 }
 
 export function ImageAnnotator(props) {
+  const {values, change, imageIndex, edit} = props;
+  //console.log(props);
+
   const classes = useStyles();
   const setting = useContext(SettingContext);
   const fields = [];
-  const vals = {};
+
   for (let i in setting.section) {
     if (i.startsWith('AnnotationField')) {
       const name = i.replace('AnnotationField', '').toLowerCase();
-      fields.push([name, setting.section[i]]);
-      vals[name] = '';
+      fields.push([name, setting.section[i], values[imageIndex][name] || '']);
     }
   }
-  const [formValues, setFormValues] = React.useState(vals);
-
-    const handleChange = (event) => {
-    console.log(event.target.value);
-    setFormValues(ps => ({
-      ...ps,
-      [event.target.name]: event.target.value
-    }));
-  }
-
-  console.log(formValues);
-
+  //console.log('fields', fields);
   return (
-    <React.Fragment>
-    {fields.map((v, i) => (
-        <FormControl className={classes.formControl} key={i}>
-        <FormElement data={v[1]} name={v[0]} change={handleChange} value={formValues[v[0]]}/>
-        </FormControl>
-    ))}
+      <React.Fragment>
+      {fields.map((v, i) => (
+          <FormControl className={classes.formControl} key={i}>
+          <FormElement data={v[1]} name={v[0]} value={v[2]} change={change} />
+          </FormControl>
+      ))}
     </React.Fragment>
   )
 }

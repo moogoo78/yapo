@@ -71,7 +71,7 @@ def main(args):
     if db_file:
         conn = sqlite3.connect(db_file)
         c = conn.cursor()
-        sql = "CREATE TABLE IF NOT EXISTS images (path TEXT, name TEXT, status TEXT, hash TEXT, key TEXT UNIQUE);"
+        sql = "CREATE TABLE IF NOT EXISTS images (path TEXT, name TEXT, status TEXT, hash TEXT, key TEXT UNIQUE, annotation TEXT, changed INTEGER);"
         c.execute(sql)
         # working dir
         sql = "CREATE TABLE IF NOT EXISTS working (key TEXT, name TEXT, status TEXT);"
@@ -80,10 +80,12 @@ def main(args):
         c.execute(sql)
 
     with os.scandir(dir_path) as it:
+        count = 0
         for entry in it:
             if not entry.name.startswith('.'):
                 ret['node_list'].append([entry.name, entry.is_dir()])
                 if entry.is_file() and check_image(entry):
+                    count += 1
                     ret['img_list'].append({
                         'path': entry.path,
                         'name': entry.name,
@@ -93,11 +95,13 @@ def main(args):
                         thumpy.make(entry.path)
 
                     if db_file:
-                        if h:= get_digest(entry.path):
-                            key = '{}-{}'.format(key_prefix, h[:6])
-                            sql = "INSERT INTO images VALUES ('{}','{}','{}','{}','{}')".format(
-                                entry.path, entry.name, 'I', h, key)
-                            c.execute(sql)
+                        #if h:= get_digest(entry.path):
+                        #key = '{}-{}'.format(key_prefix, h[:6])
+                        key = '{}-{}'.format(key_prefix, count)
+                        h = ''
+                        sql = "INSERT INTO images VALUES ('{}','{}','{}','{}','{}', '', '')".format(
+                            entry.path, entry.name, 'I', h, key)
+                        c.execute(sql)
         if db_file:
             conn.commit()
             conn.close()

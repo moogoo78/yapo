@@ -15,6 +15,8 @@ import { ImageViewer } from './components/ImageViewer';
 import { runPython } from './Utils';
 import { SettingContext } from './MainPage';
 
+import LinearProgress from '@material-ui/core/LinearProgress';
+
 function checkImage(imgPath) {
   const p = path.parse(imgPath);
   if (['.JPG', '.JPEG', '.PNG'].indexOf(p.ext.toUpperCase()) >= 0) {
@@ -53,10 +55,12 @@ export function FolderContainer(props) {
     imageList: [],
     imageIndex: -1,
     dirPath: '',
+    annotationList: [],
     isLoaded: true,
   });
   const [folderList, setFolderList] = React.useState(fdList);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  //const [annotationList, setAnnotationList] = useState(null);
 
   useEffect(() => {
     // init
@@ -75,6 +79,7 @@ export function FolderContainer(props) {
     return rows;
   }
 
+
   function getDirStats(e, index) {
     const dbFile = setting.section.SQLite.dbfile;
 
@@ -87,13 +92,18 @@ export function FolderContainer(props) {
         if (err) throw err;
         const res = JSON.parse(results);
         console.log('results:' , res);
+
+        const alist = res.results.map((x) => (x[5] ==="" ? {} : JSON.parse(x[5])));
         setFolderView(ps => ({
           ...ps,
           dirPath: dirPath,
           nodeList: res.results,
           imageList: res.results,
           imageIndex: -1,
+          annotationList: alist,
+          folderIndex: index
         }));
+
       });
   }
 
@@ -145,6 +155,7 @@ export function FolderContainer(props) {
           nodeList: res['node_list'],
           imageList: res['img_list'],
           imageIndex: -1,
+          folderIndex: -1,
           isLoaded: true
         }));
       });
@@ -214,6 +225,33 @@ export function FolderContainer(props) {
       imageIndex: inc,
     }));
   }
+
+  function handleSaveAnnotation(e, data) {
+    setImageDialogOpen(false);
+    //console.log('save', key, data);
+    const dbFile = setting.section.SQLite.dbfile;
+    //const jsData = JSON.stringify(data);
+    const keyValues = folderView.imageList.map((x, xi) => ({
+      key:x[4],
+      value:data[xi]}));
+
+    const jsData = JSON.stringify(keyValues);
+    //const args = `-d ${dbFile} -s -x save -k ${key} -a ${jsData}`.split(' ');
+
+    const args = `-d ${dbFile} -s -x save -b ${jsData}`.split(' ');
+    console.log('save anno', data, jsData);
+
+    runPython(
+      'db-images.py',
+      args,
+      (err, results) => {
+        if (err) throw err;
+        const res = JSON.parse(results);
+        console.log('save sqlite results:' , res);
+        getDirStats(e, folderView.folderIndex);
+      });
+  }
+
   function handleImageNavKey(e) {
     if (e.code === 'ArrowRight') {
       slideImage(1);
@@ -225,7 +263,6 @@ export function FolderContainer(props) {
   function handleImageNavClick(e, direction) {
     console.log('click image nav click:', direction);
     //console.log(folderView.imageList.length, folderView.imageIndex);
-    //console.log(folderView);
     slideImage(direction);
   }
 
@@ -260,27 +297,30 @@ export function FolderContainer(props) {
     len: 0,
     index: 0,
   }
-
+  /*
   if (folderView.imageList && folderView.imageIndex > -1) {
+    const alist = folderView.imageList.map((x) => (x[5] ==="" ? {} : JSON.parse(x[5])));
     imgView = {
-      path: folderView.imageList[folderView.imageIndex][0],
+      data: folderView.imageList[folderView.imageIndex],
       len: folderView.imageList.length,
       index: folderView.imageIndex + 1,
+      alist: alist
     }
-  }
-  console.log(imgView, folderView);
+  }*/
+  console.log('folderView:', folderView);
+
   return (
       <div className={classes.root}>
       <Grid container spacing={0}>
       <Grid item xs={3}>
-      { folderView.isLoaded ? 
-        <FolderMenu menuClick={handleMenuClick} folderList={folderList} menuAdd={handleMenuAdd} menuWorking={handleMenuWorking} dirStats={getDirStats} /> : <div>...</div> }
+      { folderView.isLoaded ?
+        <FolderMenu menuClick={handleMenuClick} folderList={folderList} menuAdd={handleMenuAdd} menuWorking={handleMenuWorking} dirStats={getDirStats} /> : <div>🦌💨 loading images...</div> }
       </Grid>
       <Grid item xs={9}>
       {<FolderBreadcrumb dirList={folderView.dirPath ? folderView.dirPath.split(path.sep) : []} breadcrumbClick={handleBreadcrumbClick} />}
       <Paper className={classes.paper}>
-      {imgView.path !== '' ? <ImageViewer imgView={imgView} open={imageDialogOpen} handleClose={(e)=> setImageDialogOpen(false)} handleNav={handleImageNavClick} handleKey={handleImageNavKey} /> : null}
-    {folderView.isLoaded ? <FolderNodeList nodeClick={handleNodeClick} nodeList={folderView.nodeList} /> : <div>🦌💨</div> }
+      <ImageViewer data={folderView} open={imageDialogOpen} handleClose={(e)=> setImageDialogOpen(false)} handleNav={handleImageNavClick} handleKey={handleImageNavKey} handleSave={handleSaveAnnotation} />
+    {folderView.isLoaded ? <FolderNodeList nodeClick={handleNodeClick} nodeList={folderView.nodeList} /> : <div><LinearProgress /></div> }
       </Paper>
       </Grid>
       </Grid>
