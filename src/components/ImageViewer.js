@@ -18,7 +18,7 @@ import {ImageAnnotator} from './ImageAnnotator';
 
 export function ImageViewer(props) {
   const {data, open, handleClose, handleNav, handleKey, handleSave} = props;
-  console.log(props);
+  //console.log(props);
   let imgSrc = null;
 
   const index = data.imageIndex + 1;
@@ -29,7 +29,7 @@ export function ImageViewer(props) {
   const [editKeyValue, setEditKeyValue] = useState('');
 
   useEffect(() => {
-    console.log('init',  data.annotationList[data.imageIndex]);
+    //console.log('init',  data.annotationList[data.imageIndex]);
     setAnnotationList(data.annotationList);
   }, [props.data]);
 

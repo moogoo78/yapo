@@ -164,10 +164,14 @@ export function FolderContainer(props) {
 
   function handleMenuAdd(e) {
     if (e.target.files.length) {
-      setFolderView(ps => ({...ps, isLoaded:false}));
       const newPath = path.dirname(e.target.files[0].path);
+      // check exists
+      const exists = folderList.filter((x)=> x.path === newPath);
+      if (exists.length) {
+        return null;
+      }
+      setFolderView(ps => ({...ps, isLoaded:false}));
       const folderName = newPath.split(path.sep).pop();
-
       const dbFile = setting.section.SQLite.dbfile;
       const thumbDir = setting.section.Thumbnail.destination;
 
@@ -307,7 +311,7 @@ export function FolderContainer(props) {
       alist: alist
     }
   }*/
-  console.log('folderView:', folderView);
+  //console.log('folderView:', folderView);
 
   return (
       <div className={classes.root}>
